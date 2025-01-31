@@ -1,0 +1,50 @@
+config_version: 1.0
+
+class_name: Checkpoint
+
+validations:
+  - batch_request:
+      datasource_name: documentation_datasource
+      data_connector_name: documentation_data_connector
+      data_asset_name: documentation_files
+      runtime_parameters:
+        path: docs/data/documentation_metrics.csv
+      batch_identifiers:
+        default_identifier_name: default_identifier
+    expectation_suite_name: documentation_quality_expectations_suite
+    action_list:
+      - name: store_validation_result
+        action:
+          class_name: StoreValidationResultAction
+          target:
+            store_name: validations_store
+      - name: update_data_docs
+        action:
+          class_name: UpdateDataDocsAction
+          target:
+            site_names: 
+              - local_site
+
+datasources:
+  documentation_datasource:
+    class_name: Datasource
+    execution_engine:
+      class_name: PandasExecutionEngine
+    data_connectors:
+      documentation_data_connector:
+        class_name: ConfiguredAssetFilesystemDataConnector
+        base_directory: docs/
+        glob_directive: "*.md"
+    data_assets:
+      documentation_files:
+        batch_definition_parameters:
+          path: "*.md"
+
+stores:
+  validation_results_store:
+    class_name: TupleFilesystemStore
+    base_directory: great_expectations/uncommitted/validations
+    
+  evaluation_parameters_store:
+    class_name: TupleFilesystemStore
+    base_directory: great_expectations/uncommitted/evaluation

@@ -1,0 +1,71 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Parse Code Comments with Sphinx
+        run: |
+          cd docs/sphinx
+          make html
+
+      - name: Transform Markdown
+        run: |
+          python transform_docs.py --input docs/_build/html --output docs/markdown
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Translate Documentation
+        run: |
+          python translate_docs.py --source docs/markdown --target docs/translations
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Structure Documentation with MkDocs
+        run: |
+          mkdocs build --site-dir docs/site
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Validate Documentation with Great Expectations
+        run: |
+          great_expectations checkpoint run documentation_validation_checkpoint
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Save Validation Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-report
+          path: great_expectations/uncommitted/data_docs/
+        if: always()
+
+      - name: Deploy Documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/site
