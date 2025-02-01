@@ -58,7 +58,7 @@ jobs:
           PYTHONUNBUFFERED: 1
 
       - name: Save Validation Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: validation-report
           path: great_expectations/uncommitted/data_docs/
