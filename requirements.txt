@@ -1,3 +1,6 @@
+Here is the updated requirements.txt file with the necessary changes to resolve the dependency conflict:
+
+plaintext
 altair==4.2.2
 annotated-types==0.7.0
 attrs==25.1.0
@@ -44,7 +47,7 @@ referencing==0.36.2
 regex==2024.11.6
 requests==2.32.3
 rpds-py==0.22.3
-ruamel.yaml==0.18.10
+ruamel.yaml>=0.16,<0.18
 ruamel.yaml.clib==0.2.12
 safetensors==0.5.2
 scipy==1.15.1
