@@ -69,10 +69,18 @@ jobs:
         run: |
           if [ -d "great_expectations/uncommitted/data_docs/" ] && [ "$(ls -A great_expectations/uncommitted/data_docs/)" ]; then
             echo "Directory exists and is not empty; uploading artifact."
-            actions/upload-artifact@v4 --name validation-report --path great_expectations/uncommitted/data_docs/
+            mkdir -p artifacts
+            cp -r great_expectations/uncommitted/data_docs/ artifacts/
           else
             echo "Directory does not exist or is empty; skipping artifact upload."
           fi
+
+      - name: Upload Validation Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-report
+          path: artifacts
 
       - name: Deploy Documentation to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
