@@ -23,7 +23,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'  # Use a supported Python version
 
       # Install system dependencies required for building packages like pandas
       - name: Install System Dependencies
@@ -110,7 +110,7 @@ jobs:
       # Upload the validation report using the updated release version to avoid deprecation issues
       - name: Upload Validation Report
         if: always()
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: validation-report
           path: artifacts
