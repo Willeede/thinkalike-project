@@ -54,12 +54,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools wheel
 
-      # Install Python dependencies listed in requirements.txt
+      # Install Python dependencies listed in requirements.txt and Sphinx
       - name: Install dependencies
         env:
           PYTHONUNBUFFERED: 1
         run: |
           pip install -r requirements.txt
+          pip install sphinx  # Ensure Sphinx is installed
 
       # Build documentation using Sphinx
       - name: Parse Code Comments with Sphinx
