@@ -13,102 +13,99 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository with full history
+      # 1. Check out the repository at the correct depth
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # Set up the Python environment
-      - name: Set Up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'  # Use a supported Python version
-
-      # Install system dependencies required for building packages like pandas
+      # 2. Install System Dependencies
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            python3-pip \
             python3-dev \
-            python3-venv \
             build-essential \
             meson \
             ninja-build \
             gfortran \
             libopenblas-dev \
-            liblapack-dev
+            liblapack-dev \
+            pkg-config \
+            libffi-dev
 
-      # Print versions of key tools for debugging purposes
-      - name: Debug Versions
-        run: |
-          python --version
-          meson --version
-          ninja --version
-          gfortran --version
+      # 3. Set Up Python (Force 3.12 and Add Cache Busting)
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # Explicitly set Python version to 3.12 AGAIN
+      - name: Clear pip cache # Add explicit pip cache clearing step - CACHE BUSTING!
+        run: pip cache purge
 
-      # Upgrade pip, setuptools, and wheel before installing Python packages
-      - name: Upgrade Build Tools
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools wheel
-
-      # Install Python dependencies listed in requirements.txt and Sphinx
-      - name: Install dependencies
+      # 4. Upgrade pip, setuptools, wheel, then install Python dependencies
+      - name: Install Dependencies (Force Python 3.12 for pip as well) # Add version to pip command - FORCE 3.12 EVERYWHERE!
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          pip install -r requirements.txt
-          pip install sphinx  # Ensure Sphinx is installed
+          python3.12 -m pip install --upgrade pip setuptools wheel  # Use python3.12 explicitly
+          python3.12 -m pip install -r requirements.txt # Use python3.12 explicitly
 
-      # Build documentation using Sphinx
+      # 5. Run Style Fixer on Python Scripts
+      - name: Run Code Style Fixer (autopep8)
+        run: |
+          # Find all Python files in the repository (you might want to adjust the path)
+          find . -name "*.py" -print0 | while IFS= read -r -d $'\0' file; do
+            echo "Formatting: $file"
+            python style_fixer.py "$file"  # Assuming style_fixer uses shebang to pick Python 3.12
+          done
+
+      # 6. Parse Code Comments with Sphinx
       - name: Parse Code Comments with Sphinx
         run: |
           cd docs/sphinx
           make html
 
-      # Transform generated HTML documentation to Markdown
+      # 7. Transform Markdown
       - name: Transform Markdown
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python transform_docs.py --input docs/_build/html --output docs/markdown
+          python transform_docs.py --input docs/_build/html --output docs/markdown # Assuming transform_docs uses shebang for Python 3.12
 
-      # Translate documentation into other languages
+      # 8. Translate Documentation
       - name: Translate Documentation
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python translate_docs.py --source docs/markdown --target docs/translations
+          python translate_docs.py --source docs/markdown --target docs/translations # Assuming translate_docs uses shebang for Python 3.12
 
-      # Structure the documentation site using MkDocs
+      # 9. Structure Documentation with MkDocs
       - name: Structure Documentation with MkDocs
         env:
           PYTHONUNBUFFERED: 1
         run: |
           mkdocs build --site-dir docs/site
 
-      # Validate the documentation using Great Expectations
+      # 10. Validate Documentation with Great Expectations
       - name: Validate Documentation with Great Expectations
         env:
           PYTHONUNBUFFERED: 1
         run: |
           great_expectations checkpoint run documentation_validation_checkpoint
 
-      # Save the validation report as an artifact if available
-      - name: Save Validation Report
+      # 11. Prepare Validation Artifacts
+      - name: Prepare Validation Artifacts
         if: always()
         run: |
           if [ -d "great_expectations/uncommitted/data_docs/" ] && [ "$(ls -A great_expectations/uncommitted/data_docs/)" ]; then
-            echo "Directory exists and is not empty; uploading artifact."
+            echo "Validation artifacts found. Copying to an artifacts folder..."
             mkdir -p artifacts
-            cp -r great_expectations/uncommitted/data_docs/ artifacts/
+            cp -r great_expectations/uncommitted/data_docs/* artifacts/
           else
-            echo "Directory does not exist or is empty; skipping artifact upload."
+            echo "No validation artifacts found or directory is empty."
           fi
 
-      # Upload the validation report using the updated release version to avoid deprecation issues
+      # 12. Upload Validation Report
       - name: Upload Validation Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,7 +113,7 @@ jobs:
           name: validation-report
           path: artifacts
 
-      # Deploy the built documentation to GitHub Pages
+      # 13. Deploy Documentation to GitHub Pages
       - name: Deploy Documentation to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
