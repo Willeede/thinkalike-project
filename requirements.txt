@@ -44,8 +44,9 @@ referencing==0.36.2
 regex==2024.11.6
 requests==2.32.3
 rpds-py==0.22.3
-ruamel.yaml==0.18.10
-ruamel.yaml==0.17.35
+# ruamel.yaml==0.18.10  <- REMOVED this line ENTIRELY! - NO MORE EXPLICIT ruamel.yaml VERSION!
+ruamel.yaml>=0.16 # <- CHANGED to just ruamel.yaml>=0.16 - BROADENED VERSION RANGE! - LET PIP DECIDE BEST VERSION!
+ruamel.yaml.clib==0.2.12
 safetensors==0.5.2
 scipy==1.15.1
 six==1.17.0
