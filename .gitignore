@@ -1,3 +1,13 @@
+node_modules
+*/node_modules
+
+# Virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+/.tmp.driveupload/
 # Virtual environment
 venv/
 
