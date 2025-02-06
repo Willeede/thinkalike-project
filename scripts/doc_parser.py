@@ -1,25 +1,23 @@
-import os
 import logging
+import os
 import subprocess
 import tokenize
-from typing import List
 from io import BytesIO
+from typing import List
 
 # Configure logging to display errors in the console
 logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
 class DocParser:
-    """
-    A class to parse and manage documentation files for the ThinkAlike project.
-    """
+    """A class to parse and manage documentation files for the ThinkAlike
+    project."""
 
     def create_doc_list(self, directory: str) -> List[str]:
-        """
-        Scans the given directory and returns a list of all Markdown (.md) file paths.
+        """Scans the given directory and returns a list of all Markdown (.md)
+        file paths.
 
         Parameters:
             directory (str): The path to the directory to scan.
@@ -32,7 +30,7 @@ class DocParser:
             # Walk through the directory and its subdirectories
             for root, _, files in os.walk(directory):
                 for file in files:
-                    if file.endswith('.md'):
+                    if file.endswith(".md"):
                         file_path = os.path.join(root, file)
                         markdown_files.append(file_path)
             return markdown_files
@@ -41,8 +39,8 @@ class DocParser:
             return []
 
     def extract_code_comments(self, python_file: str) -> List[str]:
-        """
-        Extracts all comments from a Python file, including single-line comments and multi-line docstrings.
+        """Extracts all comments from a Python file, including single-line
+        comments and multi-line docstrings.
 
         Parameters:
             python_file (str): The path to the Python file.
@@ -52,7 +50,7 @@ class DocParser:
         """
         comments = []
         try:
-            with open(python_file, 'rb') as f:
+            with open(python_file, "rb") as f:
                 tokens = tokenize.tokenize(f.readline)
                 for token in tokens:
                     if token.type == tokenize.COMMENT:
@@ -71,8 +69,8 @@ class DocParser:
             return []
 
     def transform_markdown(self, rst_file: str, output_md: str) -> bool:
-        """
-        Transforms a reStructuredText (.rst) file into a Markdown (.md) file using Pandoc.
+        """Transforms a reStructuredText (.rst) file into a Markdown (.md) file
+        using Pandoc.
 
         Parameters:
             rst_file (str): The path to the .rst file.
@@ -84,14 +82,16 @@ class DocParser:
         try:
             # Run Pandoc to convert RST to Markdown
             subprocess.run(
-                ['pandoc', rst_file, '-f', 'rst', '-t', 'markdown', '-o', output_md],
+                ["pandoc", rst_file, "-f", "rst", "-t", "markdown", "-o", output_md],
                 check=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
             return True
         except subprocess.CalledProcessError as e:
-            logging.error(f"Pandoc error while converting '{rst_file}' to '{output_md}': {e.stderr.decode().strip()}")
+            logging.error(
+                f"Pandoc error while converting '{rst_file}' to '{output_md}': {e.stderr.decode().strip()}"
+            )
             return False
         except FileNotFoundError:
             logging.error("Pandoc is not installed or not found in the system PATH.")

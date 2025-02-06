@@ -1,14 +1,14 @@
-"""
-This module provides functions to parse and process documentation content.
-It includes capabilities to split documents into lists, extract comments from code,
-and transform markdown text into HTML.
+"""This module provides functions to parse and process documentation content.
+
+It includes capabilities to split documents into lists, extract comments
+from code, and transform markdown text into HTML.
 """
 
 import markdown  # External library for markdown processing
 
+
 def create_doc_list(content):
-    """
-    Splits the given content into a list of lines.
+    """Splits the given content into a list of lines.
 
     Parameters:
     content (str): The content of the document.
@@ -17,12 +17,12 @@ def create_doc_list(content):
     list: A list of lines from the content.
     """
     # Split the content by newline characters to create a list of lines
-    return content.split('\n')
+    return content.split("\n")
 
 
 def extract_code_comments(code):
-    """
-    Extracts comment lines from the provided code, including inline comments.
+    """Extracts comment lines from the provided code, including inline
+    comments.
 
     Parameters:
     code (str): A string containing code snippets, possibly with comments.
@@ -31,26 +31,25 @@ def extract_code_comments(code):
     list: A list of comment strings found in the code.
     """
     comments = []
-    for line in code.split('\n'):
+    for line in code.split("\n"):
         stripped_line = line.strip()
-        
+
         # Check for full-line comments
-        if stripped_line.startswith('#'):
+        if stripped_line.startswith("#"):
             # Remove the comment symbol and any leading/trailing whitespace
-            comment = stripped_line.lstrip('#').strip()
+            comment = stripped_line.lstrip("#").strip()
             comments.append(comment)
         else:
             # Check for inline comments
-            if '#' in stripped_line:
+            if "#" in stripped_line:
                 # Split the line at the first '#' and take the comment part
-                comment = stripped_line.split('#', 1)[1].strip()
+                comment = stripped_line.split("#", 1)[1].strip()
                 comments.append(comment)
     return comments
 
 
 def transform_markdown(markdown_text):
-    """
-    Converts markdown-formatted text into HTML.
+    """Converts markdown-formatted text into HTML.
 
     Parameters:
     markdown_text (str): A string containing markdown-formatted text.
@@ -64,7 +63,7 @@ def transform_markdown(markdown_text):
 
 
 # Example usage (if you run this script directly)
-if __name__ == '__main__':
+if __name__ == "__main__":
     sample_content = """# Sample Document
 
 This is a sample document.
