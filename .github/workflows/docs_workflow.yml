@@ -1,4 +1,4 @@
-name: Documentation Workflow
+name: Docs CI Workflow  # More concise workflow name
 
 on:
   push:
@@ -11,15 +11,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12'] # You are explicitly using 3.12, so let's keep it fixed
 
     steps:
-      # 1. Check out the repository at the correct depth
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 2. Install System Dependencies
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -34,66 +35,55 @@ jobs:
             pkg-config \
             libffi-dev
 
-      # 3. Set Up Python (Force 3.12 and Add Cache Busting)
-      - name: Set Up Python
+      - name: Set Up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Explicitly set Python version to 3.12 AGAIN
-      - name: Clear pip cache # Add explicit pip cache clearing step - CACHE BUSTING!
-        run: pip cache purge
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip' # Enable pip caching - SPEED BOOST!
 
-      # 4. Upgrade pip, setuptools, wheel, then install Python dependencies
-      - name: Install Dependencies (Force Python 3.12 for pip as well) # Add version to pip command - FORCE 3.12 EVERYWHERE!
+      - name: Install Dependencies
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python3.12 -m pip install --upgrade pip setuptools wheel  # Use python3.12 explicitly
-          python3.12 -m pip install -r requirements.txt # Use python3.12 explicitly
+          python -m pip install --upgrade pip setuptools wheel # Using default python (3.12 from setup-python)
+          pip install -r requirements.txt # Using default pip (associated with 3.12)
 
-      # 5. Run Style Fixer on Python Scripts
       - name: Run Code Style Fixer (autopep8)
         run: |
-          # Find all Python files in the repository (you might want to adjust the path)
           find . -name "*.py" -print0 | while IFS= read -r -d $'\0' file; do
             echo "Formatting: $file"
-            python style_fixer.py "$file"  # Assuming style_fixer uses shebang to pick Python 3.12
+            python style_fixer.py "$file"
           done
 
-      # 6. Parse Code Comments with Sphinx
       - name: Parse Code Comments with Sphinx
         run: |
           cd docs/sphinx
           make html
 
-      # 7. Transform Markdown
       - name: Transform Markdown
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python transform_docs.py --input docs/_build/html --output docs/markdown # Assuming transform_docs uses shebang for Python 3.12
+          python transform_docs.py --input docs/_build/html --output docs/markdown
 
-      # 8. Translate Documentation
       - name: Translate Documentation
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          python translate_docs.py --source docs/markdown --target docs/translations # Assuming translate_docs uses shebang for Python 3.12
+          python translate_docs.py --source docs/markdown --target docs/translations
 
-      # 9. Structure Documentation with MkDocs
       - name: Structure Documentation with MkDocs
         env:
           PYTHONUNBUFFERED: 1
         run: |
           mkdocs build --site-dir docs/site
 
-      # 10. Validate Documentation with Great Expectations
       - name: Validate Documentation with Great Expectations
         env:
           PYTHONUNBUFFERED: 1
         run: |
           great_expectations checkpoint run documentation_validation_checkpoint
 
-      # 11. Prepare Validation Artifacts
       - name: Prepare Validation Artifacts
         if: always()
         run: |
@@ -105,7 +95,6 @@ jobs:
             echo "No validation artifacts found or directory is empty."
           fi
 
-      # 12. Upload Validation Report
       - name: Upload Validation Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,7 +102,6 @@ jobs:
           name: validation-report
           path: artifacts
 
-      # 13. Deploy Documentation to GitHub Pages
       - name: Deploy Documentation to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
